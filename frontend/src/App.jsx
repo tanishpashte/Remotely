@@ -131,6 +131,20 @@ export default function App() {
     wsRef.current.send(JSON.stringify(keyEvent));
   };
 
+  const handleWheel = (e) => {
+    e.preventDefault();
+    if (connectionState !== 'Connected' || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    const scrollEvent = {
+      type: 'scroll',
+      deltaY: e.deltaY
+    };
+
+    wsRef.current.send(JSON.stringify(scrollEvent));
+  };
+
   if (!mounted) return null;
 
 
@@ -268,6 +282,7 @@ export default function App() {
                   alt="Remote Browser Frame"
                   className="w-full h-full object-contain cursor-pointer select-none"
                   onClick={handleViewportClick}
+                  onWheel={handleWheel}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center text-center p-8 max-w-md z-10">

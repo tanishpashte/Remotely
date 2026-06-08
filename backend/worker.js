@@ -68,6 +68,12 @@ wss.on('connection', async (ws) => {
             console.log(`Executing remote keyboard press: "${key}"`);
             await page.keyboard.press(key);
           }
+        } else if (message.type === 'scroll') {
+          const { deltaY } = message;
+          if (page && !cleanedUp) {
+            console.log(`Executing remote mouse scroll: deltaY=${deltaY}`);
+            await page.mouse.wheel(0, deltaY);
+          }
         }
       } catch (err) {
         console.error('Error handling client message:', err);
