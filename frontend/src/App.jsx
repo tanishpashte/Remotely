@@ -145,6 +145,15 @@ export default function App() {
     wsRef.current.send(JSON.stringify(scrollEvent));
   };
 
+  const handleDisconnect = () => {
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    setConnectionState('Disconnected');
+    setFrame(null);
+  };
+
   if (!mounted) return null;
 
 
@@ -191,17 +200,26 @@ export default function App() {
             </span>
           </div>
 
-          <button
-            onClick={handleStartBrowser}
-            disabled={connectionState === 'Booting...'}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all duration-300 transform active:scale-95 ${
-              connectionState === 'Booting...'
-                ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
-                : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 shadow-md shadow-indigo-600/20 border border-indigo-500/20'
-            }`}
-          >
-            {connectionState === 'Booting...' ? 'Launching Box...' : 'Start Remote Browser'}
-          </button>
+          {connectionState === 'Connected' ? (
+            <button
+              onClick={handleDisconnect}
+              className="px-4 py-2 text-xs font-bold rounded-lg transition-all duration-300 transform active:scale-95 bg-gradient-to-r from-rose-600 to-red-600 text-white hover:from-rose-500 hover:to-red-500 shadow-md shadow-rose-600/20 border border-rose-500/20"
+            >
+              Disconnect
+            </button>
+          ) : (
+            <button
+              onClick={handleStartBrowser}
+              disabled={connectionState === 'Booting...'}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all duration-300 transform active:scale-95 ${
+                connectionState === 'Booting...'
+                  ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
+                  : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 shadow-md shadow-indigo-600/20 border border-indigo-500/20'
+              }`}
+            >
+              {connectionState === 'Booting...' ? 'Launching Box...' : 'Start Remote Browser'}
+            </button>
+          )}
         </div>
       </header>
 
