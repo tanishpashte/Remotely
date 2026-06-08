@@ -89,7 +89,32 @@ export default function App() {
     }
   };
 
+  const handleViewportClick = (e) => {
+    if (connectionState !== 'Connected' || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const localX = e.clientX - rect.left;
+    const localY = e.clientY - rect.top;
+
+    // Scale to the native 1280x720 viewport
+    const x = Math.round((localX / rect.width) * 1280);
+    const y = Math.round((localY / rect.height) * 720);
+
+    console.log(`Viewport click captured at: local (${localX.toFixed(1)}, ${localY.toFixed(1)}), scaled to native (${x}, ${y})`);
+
+    const clickEvent = {
+      type: 'click',
+      x,
+      y
+    };
+
+    wsRef.current.send(JSON.stringify(clickEvent));
+  };
+
   if (!mounted) return null;
+
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
@@ -219,7 +244,8 @@ export default function App() {
                 <img
                   src={frame}
                   alt="Remote Browser Frame"
-                  className="w-full h-full object-contain pointer-events-none select-none"
+                  className="w-full h-full object-contain cursor-pointer select-none"
+                  onClick={handleViewportClick}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center text-center p-8 max-w-md z-10">

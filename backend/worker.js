@@ -53,9 +53,25 @@ wss.on('connection', async (ws) => {
 
     page = await context.newPage();
 
+    ws.on('message', async (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+        if (message.type === 'click') {
+          const { x, y } = message;
+          if (page && !cleanedUp) {
+            console.log(`Executing remote click at: (${x}, ${y})`);
+            await page.mouse.click(x, y);
+          }
+        }
+      } catch (err) {
+        console.error('Error handling client message:', err);
+      }
+    });
+
     console.log('Navigating page to https://google.com...');
     await page.goto('https://google.com', { waitUntil: 'domcontentloaded' });
     console.log('Navigation completed successfully. Starting stream...');
+
 
     // Asynchronous self-scheduling loop for streaming frames
     const streamFrames = async () => {
