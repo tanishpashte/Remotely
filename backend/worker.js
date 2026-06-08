@@ -62,6 +62,12 @@ wss.on('connection', async (ws) => {
             console.log(`Executing remote click at: (${x}, ${y})`);
             await page.mouse.click(x, y);
           }
+        } else if (message.type === 'key') {
+          const { key } = message;
+          if (page && !cleanedUp) {
+            console.log(`Executing remote keyboard press: "${key}"`);
+            await page.keyboard.press(key);
+          }
         }
       } catch (err) {
         console.error('Error handling client message:', err);

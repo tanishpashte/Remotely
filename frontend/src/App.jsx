@@ -113,6 +113,24 @@ export default function App() {
     wsRef.current.send(JSON.stringify(clickEvent));
   };
 
+  const handleKeyDown = (e) => {
+    if (connectionState !== 'Connected' || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    const keysToPrevent = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Backspace', 'Space', ' ', 'Tab', 'PageUp', 'PageDown', 'Home', 'End'];
+    if (keysToPrevent.includes(e.key)) {
+      e.preventDefault();
+    }
+
+    const keyEvent = {
+      type: 'key',
+      key: e.key
+    };
+
+    wsRef.current.send(JSON.stringify(keyEvent));
+  };
+
   if (!mounted) return null;
 
 
@@ -238,7 +256,11 @@ export default function App() {
 
           {/* Centered 1280x720 Viewport */}
           <div className="relative overflow-auto flex justify-center bg-zinc-900/40 p-4">
-            <div className="w-[1280px] h-[720px] bg-zinc-950 border border-zinc-800/50 rounded-lg overflow-hidden flex items-center justify-center relative shadow-inner">
+            <div
+              tabIndex="0"
+              onKeyDown={handleKeyDown}
+              className="w-[1280px] h-[720px] bg-zinc-950 border border-zinc-800/50 rounded-lg overflow-hidden flex items-center justify-center relative shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/50 transition-all"
+            >
               
               {connectionState === 'Connected' && frame ? (
                 <img
