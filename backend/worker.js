@@ -1,4 +1,5 @@
 const WebSocket = require('ws');
+const fs = require('fs');
 const { chromium } = require('playwright');
 
 const port = process.env.PORT || 8080;
@@ -53,7 +54,66 @@ wss.on('connection', async (ws) => {
 
     context = await browser.newContext({
       viewport: { width: 1280, height: 720 },
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      acceptDownloads: true
+    });
+
+    // Handle PDF requests by forcing attachment download header
+    await context.route(/\.pdf(\?|$)/i, async (route) => {
+      try {
+        console.log(`Intercepting PDF request: ${route.request().url()}`);
+        const response = await route.fetch();
+        await route.fulfill({
+          response,
+          headers: {
+            ...response.headers(),
+            'content-disposition': 'attachment'
+          }
+        });
+      } catch (err) {
+        console.error('Error routing PDF request:', err);
+        await route.continue().catch(() => {});
+      }
+    });
+
+    // Monitor and manage multiple pages/tabs dynamically
+    const pages = [];
+    context.on('page', (newPage) => {
+      console.log('New page/tab opened');
+      pages.push(newPage);
+      page = newPage;
+
+      newPage.on('close', () => {
+        console.log('Page/tab closed');
+        const index = pages.indexOf(newPage);
+        if (index > -1) {
+          pages.splice(index, 1);
+        }
+        if (pages.length > 0) {
+          page = pages[pages.length - 1];
+          console.log(`Switched active page to: ${page.url()}`);
+        } else {
+          page = null;
+        }
+      });
+    });
+
+    context.on('download', async (download) => {
+      try {
+        console.log(`Intercepted download: ${download.suggestedFilename()}`);
+        const path = await download.path();
+        const buffer = fs.readFileSync(path);
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ 
+            type: 'download', 
+            filename: download.suggestedFilename(), 
+            data: buffer.toString('base64') 
+          }));
+          console.log(`Successfully sent download file ${download.suggestedFilename()} to client`);
+        }
+      } catch (err) {
+        console.error('Error handling download event:', err);
+      }
     });
 
     page = await context.newPage();

@@ -64,12 +64,31 @@ export default function App() {
 
       ws.onmessage = (event) => {
         try {
-          const message = JSON.parse(event.data);
-          if (message.type === 'frame' && message.data) {
-            setFrame(`data:image/jpeg;base64,${message.data}`);
+          const data = JSON.parse(event.data);
+          if (data.type === 'frame' && data.data) {
+            setFrame(`data:image/jpeg;base64,${data.data}`);
+          } else if (data.type === 'download') {
+            console.log('Received download message:', data.filename);
+            const byteCharacters = atob(data.data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/octet-stream' });
+            
+            const a = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            a.href = url;
+            a.download = data.filename;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
           }
         } catch (err) {
-          console.error('Failed to parse frame message:', err);
+          console.error('Failed to parse message:', err);
         }
       };
 
