@@ -94,6 +94,14 @@ wss.on('connection', async (ws) => {
     const streamFrames = async () => {
       while (isStreaming && ws.readyState === WebSocket.OPEN) {
         const startTime = Date.now();
+
+        // Check if ws.bufferedAmount is greater than 1 MB (1 * 1024 * 1024)
+        if (ws.bufferedAmount > 1 * 1024 * 1024) {
+          console.log(`[Backpressure] ws.bufferedAmount (${ws.bufferedAmount} bytes) exceeds 1MB limit. Skipping frame.`);
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          continue;
+        }
+
         try {
           const buffer = await page.screenshot({
             type: 'jpeg',
