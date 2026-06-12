@@ -139,6 +139,18 @@ wss.on('connection', async (ws) => {
             console.log(`Executing remote mouse scroll: deltaY=${deltaY}`);
             await page.mouse.wheel(0, deltaY);
           }
+        } else if (message.type === 'navigation') {
+          if (message.action === 'back') {
+            if (page && !cleanedUp) {
+              console.log('Executing remote navigation: goBack');
+              await page.goBack().catch(() => {});
+            }
+          } else if (message.action === 'forward') {
+            if (page && !cleanedUp) {
+              console.log('Executing remote navigation: goForward');
+              await page.goForward().catch(() => {});
+            }
+          }
         }
       } catch (err) {
         console.error('Error handling client message:', err);

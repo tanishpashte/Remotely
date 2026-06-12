@@ -275,12 +275,28 @@ export default function App() {
 
             {/* Back / Forward / Refresh controls */}
             <div className="flex items-center gap-3 text-zinc-500 ml-4 mr-2">
-              <button disabled className="hover:text-zinc-300 transition-colors">
+              <button
+                disabled={connectionState !== 'Connected'}
+                onClick={() => {
+                  if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                    wsRef.current.send(JSON.stringify({ type: 'navigation', action: 'back' }));
+                  }
+                }}
+                className="hover:text-zinc-300 transition-colors disabled:opacity-40 disabled:hover:text-zinc-500"
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                 </svg>
               </button>
-              <button disabled className="hover:text-zinc-300 transition-colors">
+              <button
+                disabled={connectionState !== 'Connected'}
+                onClick={() => {
+                  if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                    wsRef.current.send(JSON.stringify({ type: 'navigation', action: 'forward' }));
+                  }
+                }}
+                className="hover:text-zinc-300 transition-colors disabled:opacity-40 disabled:hover:text-zinc-500"
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                 </svg>
